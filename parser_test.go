@@ -27,12 +27,3 @@ func TestParseFileOnNonFile(t *testing.T) {
 		t.Fatalf("Expected error, got match")
 	}
 }
-
-// func TestParseOneFileOneBlock(t *testing.T) {
-// 	diff, _ := os.ReadFile("./test/one-file-one-block.diff")
-// 	parsed := parse(string(diff))
-
-// 	if parsed.Files[0] != "file" {
-// 		t.Fatalf("Expected actual")
-// 	}
-// }
