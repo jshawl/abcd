@@ -3,10 +3,8 @@ package main
 import (
 	"fmt"
 	"os/exec"
+	"regexp"
 )
-
-type Diff struct {
-}
 
 func main() {
 	cmd := exec.Command("git", "diff", "--color")
@@ -16,7 +14,9 @@ func main() {
 		fmt.Println(err.Error())
 		return
 	}
+	re := regexp.MustCompile("^diff")
+	output := re.Split(string(stdout), -1)
 
 	// Print the output
-	fmt.Println(string(stdout))
+	fmt.Println(output)
 }

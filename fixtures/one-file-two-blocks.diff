@@ -1,0 +1,16 @@
+diff --git a/file b/file
+index e5ce6bf..07e61eb 100644
+--- a/file
++++ b/file
+@@ -1,4 +1,4 @@
+-1
++10
+
+
+
+@@ -6,4 +6,4 @@
+
+
+
+-3
++30
