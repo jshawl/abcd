@@ -84,6 +84,13 @@ func TestParseLineDiff(t *testing.T) {
 	}
 }
 
+func TestParseLineDiffEmptyLine(t *testing.T) {
+	_, err := parseLine("")
+	if err != nil {
+		t.Fatalf("Expected line to be parsed")
+	}
+}
+
 func TestParseLineNewPreamble(t *testing.T) {
 	actual, _ := parseLine("+++ a/file")
 	if actual != "" {
@@ -102,5 +109,27 @@ func TestParseDiff(t *testing.T) {
 	}
 	if len(actual.Files[0].Blocks[0].Lines) != 1 {
 		t.Fatalf("Expected 1 File, 1 Block, 1 Line")
+	}
+}
+
+func TestParseDiffOneFileTwoBlocks(t *testing.T) {
+	contents, _ := os.ReadFile("./test/one-file-two-blocks.diff")
+	actual, _ := parseDiff(string(contents))
+	if len(actual.Files) != 1 {
+		t.Fatalf("Expected 1 file")
+	}
+	if len(actual.Files[0].Blocks) != 2 {
+		t.Fatalf("Expected 1 File, 2 Blocks")
+	}
+}
+
+func TestParseDiffTwoFilesTwoBlocks(t *testing.T) {
+	contents, _ := os.ReadFile("./test/two-files-two-blocks.diff")
+	actual, _ := parseDiff(string(contents))
+	if len(actual.Files) != 2 {
+		t.Fatalf("Expected 2 files")
+	}
+	if len(actual.Files[0].Blocks) != 2 {
+		t.Fatalf("Expected 2 Files, 2 Blocks")
 	}
 }
