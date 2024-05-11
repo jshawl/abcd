@@ -1,3 +1,3 @@
-module live-diff
+module diffrn
 
 go 1.21.6
