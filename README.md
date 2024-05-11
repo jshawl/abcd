@@ -24,7 +24,7 @@ import (
 )
 
 func main() {
-    cmd := exec.Command("git", "diff", "--color")
+    cmd := exec.Command("git", "diff")
     stdout, err := cmd.Output()
     diff := diffrn.Parse(string(stdout))
 
