@@ -24,7 +24,7 @@ import (
 
 func main() {
     cmd := exec.Command("git", "diff", "--color")
-	stdout, err := cmd.Output()
+    stdout, err := cmd.Output()
     diff := diffrn.Parse(string(stdout))
 
     fmt.Println(len(diff.Files))
