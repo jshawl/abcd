@@ -9,7 +9,7 @@ import (
 func TestParseFile(t *testing.T) {
 	expected := "file"
 	actual, _ := parseFile("diff --git a/file b/file")
-	if expected != actual {
+	if expected != actual.Name {
 		t.Fatalf(fmt.Sprintf("Expected: %s Actual: %s", expected, actual))
 	}
 }
@@ -17,7 +17,7 @@ func TestParseFile(t *testing.T) {
 func TestParseFileWithExtension(t *testing.T) {
 	expected := "file.txt"
 	actual, _ := parseFile("diff --git a/file.txt b/file.txt")
-	if expected != actual {
+	if expected != actual.Name {
 		t.Fatalf(fmt.Sprintf("Expected: %s Actual: %s", expected, actual))
 	}
 }

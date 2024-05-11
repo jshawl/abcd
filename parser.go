@@ -21,15 +21,6 @@ type Block struct {
 	NewRange string
 }
 
-func parseFile(line string) (string, error) {
-	r := regexp.MustCompile(`diff --git a/([\w\.]+) b/`)
-	matches := r.FindAllStringSubmatch(line, -1)
-	if len(matches) != 1 {
-		return "", errors.New("match not found")
-	}
-	return matches[0][1], nil
-}
-
 func parseBlock(line string) (Block, error) {
 	r := regexp.MustCompile(`@@ -([0-9]+,[0-9]+) \+([0-9]+,?[0-9]*) @@`)
 	matches := r.FindAllStringSubmatch(line, -1)
@@ -41,6 +32,15 @@ func parseBlock(line string) (Block, error) {
 	return Block{OldRange: oldRange, NewRange: newRange}, nil
 }
 
+func parseFile(line string) (File, error) {
+	r := regexp.MustCompile(`diff --git a/([\w\.]+) b/`)
+	matches := r.FindAllStringSubmatch(line, -1)
+	if len(matches) != 1 {
+		return File{}, errors.New("match not found")
+	}
+	return File{Name: matches[0][1]}, nil
+}
+
 func parseDiff(lines string) (Diff, error) {
 	diff := Diff{}
 	var parsedLines []string
@@ -49,9 +49,8 @@ func parseDiff(lines string) (Diff, error) {
 		parsedLines = append(parsedLines, sc.Text())
 	}
 	for _, v := range parsedLines {
-		parsedFile, _ := parseFile(v)
-		if parsedFile != "" {
-			file := File{Name: parsedFile}
+		file, _ := parseFile(v)
+		if file.Name != "" {
 			diff.Files = append(diff.Files, file)
 		}
 	}
