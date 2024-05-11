@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os/exec"
 )
@@ -15,6 +14,5 @@ func main() {
 		return
 	}
 	diff, _ := parseDiff(string(stdout))
-	diffJson, _ := json.MarshalIndent(diff, "", "    ")
-	fmt.Println(string(diffJson))
+	render(diff)
 }
