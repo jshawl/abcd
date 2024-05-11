@@ -19,6 +19,15 @@ type File struct {
 type Block struct {
 	OldRange string
 	NewRange string
+	Lines    []string
+}
+
+func parseLine(line string) (string, error) {
+	r := regexp.MustCompile(`^(diff|index|---|\+\+\+|@@)`)
+	if !r.MatchString(line) {
+		return line, nil
+	}
+	return "", nil
 }
 
 func parseBlock(line string) (Block, error) {
@@ -52,6 +61,19 @@ func parseDiff(lines string) (Diff, error) {
 		file, _ := parseFile(v)
 		if file.Name != "" {
 			diff.Files = append(diff.Files, file)
+		}
+		lastFile := &diff.Files[len(diff.Files)-1]
+
+		block, _ := parseBlock(v)
+		if block.OldRange != "" {
+			lastFile.Blocks = append(lastFile.Blocks, block)
+		}
+
+		blocks := lastFile.Blocks
+
+		line, _ := parseLine(v)
+		if line != "" {
+			blocks[len(blocks)-1].Lines = append(blocks[len(blocks)-1].Lines, line)
 		}
 	}
 	return diff, nil

@@ -49,6 +49,48 @@ func TestParseBlockWithChangedLines(t *testing.T) {
 	}
 }
 
+func TestParseLineDiffPreamble(t *testing.T) {
+	actual, _ := parseLine("diff --git a/file b/file")
+	if actual != "" {
+		t.Fatalf("Expected diff line to be ignored")
+	}
+}
+
+func TestParseLineIndexPreamble(t *testing.T) {
+	actual, _ := parseLine("index e69de29..d00491f 100644")
+	if actual != "" {
+		t.Fatalf("Expected index line to be ignored")
+	}
+}
+
+func TestParseLineOldPreamble(t *testing.T) {
+	actual, _ := parseLine("--- a/file")
+	if actual != "" {
+		t.Fatalf("Expected old line to be ignored")
+	}
+}
+
+func TestParseLineBlockPreamble(t *testing.T) {
+	actual, _ := parseLine("@@ -0,0 +1 @@")
+	if actual != "" {
+		t.Fatalf("Expected block line to be ignored")
+	}
+}
+
+func TestParseLineDiff(t *testing.T) {
+	actual, _ := parseLine("- removed this line")
+	if actual != "- removed this line" {
+		t.Fatalf("Expected line to be parsed")
+	}
+}
+
+func TestParseLineNewPreamble(t *testing.T) {
+	actual, _ := parseLine("+++ a/file")
+	if actual != "" {
+		t.Fatalf("Expected new line to be ignored")
+	}
+}
+
 func TestParseDiff(t *testing.T) {
 	contents, _ := os.ReadFile("./test/one-file-one-block.diff")
 	actual, _ := parseDiff(string(contents))
@@ -57,5 +99,8 @@ func TestParseDiff(t *testing.T) {
 	}
 	if actual.Files[0].Name != "file" {
 		t.Fatalf("Expected 1 file name to be 'file'")
+	}
+	if len(actual.Files[0].Blocks[0].Lines) != 1 {
+		t.Fatalf("Expected 1 File, 1 Block, 1 Line")
 	}
 }
