@@ -16,6 +16,7 @@ opens a pager, watches for changes, and updates the diff
 package main
 
 import (
+    "encoding/json"
     "fmt"
     "os"
 
@@ -23,12 +24,11 @@ import (
 )
 
 func main() {
-    cmd := exec.Command("git", "diff", "--color")
+    cmd := exec.Command("git", "diff")
     stdout, err := cmd.Output()
     diff := diffrn.Parse(string(stdout))
 
-    fmt.Println(len(diff.Files))
-    fmt.Println(len(diff.Files[0].Blocks))
-    fmt.Println(len(diff.Files[0].Blocks[0].Lines))
+    diffJson, _ := json.MarshalIndent(diff, "", "    ")
+    fmt.Println(string(diffJson))
 }
 ```

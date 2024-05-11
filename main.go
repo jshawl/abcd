@@ -1,22 +1,20 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os/exec"
-	"regexp"
 )
 
 func main() {
-	cmd := exec.Command("git", "diff", "--color")
+	cmd := exec.Command("git", "diff")
 	stdout, err := cmd.Output()
 
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
-	re := regexp.MustCompile("^diff")
-	output := re.Split(string(stdout), -1)
-
-	// Print the output
-	fmt.Println(output)
+	diff, _ := parseDiff(string(stdout))
+	diffJson, _ := json.MarshalIndent(diff, "", "    ")
+	fmt.Println(string(diffJson))
 }

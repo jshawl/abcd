@@ -27,7 +27,7 @@ func parseLine(line string) (string, error) {
 	if !r.MatchString(line) {
 		return line, nil
 	}
-	return "", nil
+	return "", errors.New("no match")
 }
 
 func parseBlock(line string) (Block, error) {
@@ -71,8 +71,8 @@ func parseDiff(lines string) (Diff, error) {
 
 		blocks := lastFile.Blocks
 
-		line, _ := parseLine(v)
-		if line != "" {
+		line, err := parseLine(v)
+		if err == nil {
 			blocks[len(blocks)-1].Lines = append(blocks[len(blocks)-1].Lines, line)
 		}
 	}
