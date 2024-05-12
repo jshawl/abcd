@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -46,10 +48,40 @@ type model struct {
 	content  string
 	ready    bool
 	viewport viewport.Model
+	diff     Diff
+}
+
+type refreshMsg struct {
+	rawDiff string
 }
 
 func (m model) Init() tea.Cmd {
 	return nil
+}
+
+func buildOutput(m model) string {
+	var content strings.Builder
+	for _, file := range m.diff.Files {
+		content.WriteString(fileStyle.Render(file.Name))
+		content.WriteString("\n")
+		for blockI, block := range file.Blocks {
+			for _, line := range block.Lines {
+				if strings.HasPrefix(line, "-") {
+					content.WriteString(removedStyle.Render(line))
+				} else if strings.HasPrefix(line, "+") {
+					content.WriteString(addedStyle.Render(line))
+				} else {
+					content.WriteString(line)
+				}
+				content.WriteString("\n")
+			}
+			if blockI < len(file.Blocks)-1 {
+				content.WriteString(hr.Render("···"))
+				content.WriteString("\n")
+			}
+		}
+	}
+	return content.String()
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -59,6 +91,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	)
 
 	switch msg := msg.(type) {
+	case refreshMsg:
+		m.diff, _ = parseDiff(msg.rawDiff)
+		m.viewport.SetContent(buildOutput(m))
 	case tea.KeyMsg:
 		if k := msg.String(); k == "ctrl+c" || k == "q" || k == "esc" {
 			return m, tea.Quit
@@ -80,7 +115,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	// Handle keyboard and mouse events in the viewport
 	m.viewport, cmd = m.viewport.Update(msg)
 	cmds = append(cmds, cmd)
 
@@ -112,34 +146,26 @@ func max(a, b int) int {
 	return b
 }
 
-func render(diff Diff) {
-	var content strings.Builder
-	for _, file := range diff.Files {
-		content.WriteString(fileStyle.Render(file.Name))
-		content.WriteString("\n")
-		for blockI, block := range file.Blocks {
-			for _, line := range block.Lines {
-				if strings.HasPrefix(line, "-") {
-					content.WriteString(removedStyle.Render(line))
-				} else if strings.HasPrefix(line, "+") {
-					content.WriteString(addedStyle.Render(line))
-				} else {
-					content.WriteString(line)
-				}
-				content.WriteString("\n")
-			}
-			if blockI < len(file.Blocks)-1 {
-				content.WriteString(hr.Render("···"))
-				content.WriteString("\n")
-			}
-		}
-	}
+func gitDiffRaw() string {
+	cmd := exec.Command("git", "diff")
+	stdout, _ := cmd.Output()
+	return string(stdout)
+}
 
+func render() {
 	p := tea.NewProgram(
-		model{content: content.String()},
-		tea.WithAltScreen(),       // use the full size of the terminal in its "alternate screen buffer"
-		tea.WithMouseCellMotion(), // turn on mouse support so we can track the mouse wheel
+		model{},
+		tea.WithAltScreen(),
+		tea.WithMouseCellMotion(),
 	)
+
+	go func() {
+		for {
+			pause := time.Duration(1) * time.Second
+			p.Send(refreshMsg{rawDiff: gitDiffRaw()})
+			time.Sleep(pause)
+		}
+	}()
 
 	if _, err := p.Run(); err != nil {
 		fmt.Println("could not run program:", err)
