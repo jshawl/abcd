@@ -61,15 +61,19 @@ func (m model) Init() tea.Cmd {
 
 func buildOutput(m model) string {
 	var content strings.Builder
+	if len(m.diff.Files) == 0 {
+		return "No diff to show! Working directory is clean."
+	}
+
 	for _, file := range m.diff.Files {
-		content.WriteString(fileStyle.Render(file.Name))
+		content.WriteString(fileStyle.Width(m.viewport.Width).Render(file.Name))
 		content.WriteString("\n")
 		for blockI, block := range file.Blocks {
 			for _, line := range block.Lines {
 				if strings.HasPrefix(line, "-") {
-					content.WriteString(removedStyle.Render(line))
+					content.WriteString(removedStyle.Width(m.viewport.Width).Render(line))
 				} else if strings.HasPrefix(line, "+") {
-					content.WriteString(addedStyle.Render(line))
+					content.WriteString(addedStyle.Width(m.viewport.Width).Render(line))
 				} else {
 					content.WriteString(line)
 				}
