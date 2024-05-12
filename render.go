@@ -12,38 +12,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-var fileStyle = lipgloss.NewStyle().
-	Bold(true).
-	Foreground(lipgloss.Color("#FAFAFA")).
-	Background(lipgloss.Color("#7D56F4")).
-	Width(100)
-
-var removedStyle = lipgloss.NewStyle().
-	Background(lipgloss.Color("#ffe8e7")).
-	Width(100)
-
-var addedStyle = lipgloss.NewStyle().
-	Background(lipgloss.Color("#f0f8ec")).
-	Width(100)
-
-var hr = lipgloss.NewStyle().
-	Background(lipgloss.Color("#f6f6f6")).
-	Width(100)
-
-var (
-	titleStyle = func() lipgloss.Style {
-		// b := lipgloss.RoundedBorder()
-		// b.Right = "├"
-		return lipgloss.NewStyle().Padding(0, 0)
-	}()
-
-	infoStyle = func() lipgloss.Style {
-		b := lipgloss.RoundedBorder()
-		b.Left = "┤"
-		return titleStyle.Copy().BorderStyle(b)
-	}()
-)
-
 type model struct {
 	content  string
 	ready    bool
@@ -88,6 +56,27 @@ func buildOutput(m model) string {
 	return content.String()
 }
 
+func (m *model) windowSizeUpdate(msg tea.WindowSizeMsg) {
+	headerHeight := lipgloss.Height(m.headerView())
+	footerHeight := lipgloss.Height(m.footerView())
+	verticalMarginHeight := headerHeight + footerHeight
+
+	if !m.ready {
+		m.viewport = viewport.New(msg.Width, msg.Height-verticalMarginHeight)
+		m.viewport.YPosition = headerHeight
+		m.viewport.SetContent(m.content)
+		m.ready = true
+	} else {
+		m.viewport.Width = msg.Width
+		m.viewport.Height = msg.Height - verticalMarginHeight
+	}
+}
+
+func (m *model) refreshUpdate(msg refreshMsg) {
+	m.diff, _ = parseDiff(msg.rawDiff)
+	m.viewport.SetContent(buildOutput(*m))
+}
+
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
@@ -96,27 +85,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case refreshMsg:
-		m.diff, _ = parseDiff(msg.rawDiff)
-		m.viewport.SetContent(buildOutput(m))
+		m.refreshUpdate(msg)
 	case tea.KeyMsg:
 		if k := msg.String(); k == "ctrl+c" || k == "q" || k == "esc" {
 			return m, tea.Quit
 		}
 
 	case tea.WindowSizeMsg:
-		headerHeight := lipgloss.Height(m.headerView())
-		footerHeight := lipgloss.Height(m.footerView())
-		verticalMarginHeight := headerHeight + footerHeight
-
-		if !m.ready {
-			m.viewport = viewport.New(msg.Width, msg.Height-verticalMarginHeight)
-			m.viewport.YPosition = headerHeight
-			m.viewport.SetContent(m.content)
-			m.ready = true
-		} else {
-			m.viewport.Width = msg.Width
-			m.viewport.Height = msg.Height - verticalMarginHeight
-		}
+		m.windowSizeUpdate(msg)
 	}
 
 	m.viewport, cmd = m.viewport.Update(msg)
