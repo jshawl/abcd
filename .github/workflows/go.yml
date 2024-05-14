@@ -18,7 +18,12 @@ jobs:
           go-version: "1.21"
 
       - name: Build
-        run: go build -v ./...
+        run: GOOS=darwin GOARCH=arm64 go build -v ./...
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: diffrn
+          path: ./diffrn
 
       - name: Test
         run: go test -v ./...
