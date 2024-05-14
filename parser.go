@@ -42,7 +42,7 @@ func parseBlock(line string) (Block, error) {
 }
 
 func parseFile(line string) (File, error) {
-	r := regexp.MustCompile(`diff --git a/([\w\.]+) b/`)
+	r := regexp.MustCompile(`diff --git a/([\w\.\/]+) b/`)
 	matches := r.FindAllStringSubmatch(line, -1)
 	if len(matches) != 1 {
 		return File{}, errors.New("match not found")
