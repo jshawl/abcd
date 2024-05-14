@@ -22,6 +22,14 @@ func TestParseFileWithExtension(t *testing.T) {
 	}
 }
 
+func TestParseFileWithSlashes(t *testing.T) {
+	expected := "folder/file.txt"
+	actual, _ := parseFile("diff --git a/folder/file.txt b/folder/file.txt")
+	if expected != actual.Name {
+		t.Fatalf(fmt.Sprintf("Expected: %s Actual: %s", expected, actual))
+	}
+}
+
 func TestParseFileOnNonFile(t *testing.T) {
 	_, err := parseFile("not a line with a filename")
 	if err == nil {
