@@ -6,6 +6,7 @@ require (
 	github.com/charmbracelet/bubbles v0.18.0
 	github.com/charmbracelet/bubbletea v0.26.2
 	github.com/charmbracelet/lipgloss v0.10.0
+	github.com/jshawl/diffrn v0.0.0
 )
 
 require (
@@ -25,3 +26,5 @@ require (
 	golang.org/x/term v0.20.0 // indirect
 	golang.org/x/text v0.3.8 // indirect
 )
+
+replace github.com/jshawl/diffrn v0.0.0 => ./
