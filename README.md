@@ -1,8 +1,6 @@
 # diffrn
 
-## Vision
-
-### CLI
+## CLI
 
 ```
 diffn [--staged] [treeish]
@@ -10,7 +8,7 @@ diffn [--staged] [treeish]
 
 opens a pager, watches for changes, and updates the diff
 
-### Library
+## Library
 
 ```go
 package main
@@ -26,7 +24,7 @@ import (
 func main() {
     cmd := exec.Command("git", "diff")
     stdout, err := cmd.Output()
-    diff := diffrn.Parse(string(stdout))
+    diff := diffrn.ParseDiff(string(stdout))
 
     diffJson, _ := json.MarshalIndent(diff, "", "    ")
     fmt.Println(string(diffJson))

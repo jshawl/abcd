@@ -10,13 +10,14 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	parser "github.com/jshawl/diffrn/parser"
 )
 
 type model struct {
 	content  string
 	ready    bool
 	viewport viewport.Model
-	diff     Diff
+	diff     parser.Diff
 }
 
 type refreshMsg struct {
@@ -73,7 +74,7 @@ func (m *model) windowSizeUpdate(msg tea.WindowSizeMsg) {
 }
 
 func (m *model) refreshUpdate(msg refreshMsg) {
-	m.diff, _ = parseDiff(msg.rawDiff)
+	m.diff, _ = parser.ParseDiff(msg.rawDiff)
 	m.viewport.SetContent(buildOutput(*m))
 }
 

@@ -1,4 +1,4 @@
-package main
+package parser
 
 import (
 	"fmt"
@@ -108,7 +108,7 @@ func TestParseLineNewPreamble(t *testing.T) {
 
 func TestParseDiff(t *testing.T) {
 	contents, _ := os.ReadFile("./test/one-file-one-block.diff")
-	actual, _ := parseDiff(string(contents))
+	actual, _ := ParseDiff(string(contents))
 	if len(actual.Files) != 1 {
 		t.Fatalf("Expected 1 file")
 	}
@@ -122,7 +122,7 @@ func TestParseDiff(t *testing.T) {
 
 func TestParseDiffOneFileTwoBlocks(t *testing.T) {
 	contents, _ := os.ReadFile("./test/one-file-two-blocks.diff")
-	actual, _ := parseDiff(string(contents))
+	actual, _ := ParseDiff(string(contents))
 	if len(actual.Files) != 1 {
 		t.Fatalf("Expected 1 file")
 	}
@@ -133,7 +133,7 @@ func TestParseDiffOneFileTwoBlocks(t *testing.T) {
 
 func TestParseDiffTwoFilesTwoBlocks(t *testing.T) {
 	contents, _ := os.ReadFile("./test/two-files-two-blocks.diff")
-	actual, _ := parseDiff(string(contents))
+	actual, _ := ParseDiff(string(contents))
 	if len(actual.Files) != 2 {
 		t.Fatalf("Expected 2 files")
 	}

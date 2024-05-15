@@ -1,4 +1,4 @@
-package main
+package parser
 
 import (
 	"bufio"
@@ -50,7 +50,7 @@ func parseFile(line string) (File, error) {
 	return File{Name: matches[0][1]}, nil
 }
 
-func parseDiff(lines string) (Diff, error) {
+func ParseDiff(lines string) (Diff, error) {
 	diff := Diff{}
 	var parsedLines []string
 	sc := bufio.NewScanner(strings.NewReader(lines))
