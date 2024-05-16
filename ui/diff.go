@@ -13,22 +13,29 @@ import (
 )
 
 type Diff struct {
-	content  string
 	ready    bool
 	viewport viewport.Model
 	diff     parser.Diff
 }
 
-type TickMsg time.Time
+type TickMsg struct{}
 
-func doTick() tea.Cmd {
+func (m Diff) Tick() tea.Cmd {
 	return tea.Tick(time.Second, func(t time.Time) tea.Msg {
-		return TickMsg(t)
+		return TickMsg{}
 	})
 }
 
 func (m Diff) Init() tea.Cmd {
-	return doTick()
+	var (
+		cmd  tea.Cmd
+		cmds []tea.Cmd
+	)
+	cmd = func() tea.Msg {
+		return TickMsg{}
+	}
+	cmds = append(cmds, cmd, m.Tick())
+	return tea.Batch(cmds...)
 }
 
 func buildOutput(m Diff) string {
@@ -68,9 +75,6 @@ func (m *Diff) windowSizeUpdate(msg tea.WindowSizeMsg) {
 	if !m.ready {
 		m.viewport = viewport.New(msg.Width, msg.Height-verticalMarginHeight)
 		m.viewport.YPosition = headerHeight
-		// TODO set content from TickMsg
-		m.diff, _ = parser.ParseDiff(gitDiffRaw())
-		m.viewport.SetContent(buildOutput(*m))
 		m.ready = true
 	} else {
 		m.viewport.Width = msg.Width
@@ -88,7 +92,7 @@ func (m Diff) Update(msg tea.Msg) (Diff, tea.Cmd) {
 	case TickMsg:
 		m.diff, _ = parser.ParseDiff(gitDiffRaw())
 		m.viewport.SetContent(buildOutput(m))
-		return m, doTick()
+		return m, m.Tick()
 
 	case tea.WindowSizeMsg:
 		m.windowSizeUpdate(msg)
