@@ -62,23 +62,17 @@ func ParseDiff(lines string) (Diff, error) {
 		if file.Name == "" && len(diff.Files) == 0 {
 			continue
 		}
-
 		if file.Name != "" {
 			diff.Files = append(diff.Files, file)
 		}
-
 		lastFile := &diff.Files[len(diff.Files)-1]
-
 		block, _ := parseBlock(v)
 		if block.OldRange != "" {
 			lastFile.Blocks = append(lastFile.Blocks, block)
 		}
-
 		blocks := lastFile.Blocks
-
 		line, err := parseLine(v)
 		if err == nil {
-
 			blocks[len(blocks)-1].Lines = append(blocks[len(blocks)-1].Lines, line)
 		}
 	}
