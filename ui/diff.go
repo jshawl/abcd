@@ -1,11 +1,9 @@
-package main
+package ui
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
 	"strings"
-	"time"
 
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -13,7 +11,7 @@ import (
 	parser "github.com/jshawl/diffrn/parser"
 )
 
-type model struct {
+type Diff struct {
 	content  string
 	ready    bool
 	viewport viewport.Model
@@ -24,11 +22,11 @@ type refreshMsg struct {
 	rawDiff string
 }
 
-func (m model) Init() tea.Cmd {
+func (m Diff) Init() tea.Cmd {
 	return nil
 }
 
-func buildOutput(m model) string {
+func buildOutput(m Diff) string {
 	var content strings.Builder
 	if len(m.diff.Files) == 0 {
 		return "No diff to show! Working directory is clean."
@@ -57,9 +55,9 @@ func buildOutput(m model) string {
 	return content.String()
 }
 
-func (m *model) windowSizeUpdate(msg tea.WindowSizeMsg) {
-	headerHeight := lipgloss.Height(m.headerView())
-	footerHeight := lipgloss.Height(m.footerView())
+func (m *Diff) windowSizeUpdate(msg tea.WindowSizeMsg) {
+	headerHeight := lipgloss.Height("\n")
+	footerHeight := lipgloss.Height("\n")
 	verticalMarginHeight := headerHeight + footerHeight
 
 	if !m.ready {
@@ -73,12 +71,12 @@ func (m *model) windowSizeUpdate(msg tea.WindowSizeMsg) {
 	}
 }
 
-func (m *model) refreshUpdate(msg refreshMsg) {
+func (m *Diff) refreshUpdate(msg refreshMsg) {
 	m.diff, _ = parser.ParseDiff(msg.rawDiff)
 	m.viewport.SetContent(buildOutput(*m))
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m Diff) Update(msg tea.Msg) (Diff, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd
@@ -87,10 +85,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case refreshMsg:
 		m.refreshUpdate(msg)
-	case tea.KeyMsg:
-		if k := msg.String(); k == "ctrl+c" || k == "q" || k == "esc" {
-			return m, tea.Quit
-		}
 
 	case tea.WindowSizeMsg:
 		m.windowSizeUpdate(msg)
@@ -102,19 +96,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m model) View() string {
+func (m Diff) View() string {
 	if !m.ready {
 		return "\n  Initializing..."
 	}
 	return fmt.Sprintf("%s\n%s\n%s", m.headerView(), m.viewport.View(), m.footerView())
 }
 
-func (m model) headerView() string {
+func (m Diff) headerView() string {
 	title := titleStyle.Render("diffrn")
 	return lipgloss.JoinHorizontal(lipgloss.Center, title)
 }
 
-func (m model) footerView() string {
+func (m Diff) footerView() string {
 	info := infoStyle.Render(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100))
 	line := strings.Repeat("─", max(0, m.viewport.Width-lipgloss.Width(info)))
 	return lipgloss.JoinHorizontal(lipgloss.Center, line, info)
@@ -131,25 +125,4 @@ func gitDiffRaw() string {
 	cmd := exec.Command("git", "diff")
 	stdout, _ := cmd.Output()
 	return string(stdout)
-}
-
-func render() {
-	p := tea.NewProgram(
-		model{},
-		tea.WithAltScreen(),
-		tea.WithMouseCellMotion(),
-	)
-
-	go func() {
-		for {
-			pause := time.Duration(1) * time.Second
-			p.Send(refreshMsg{rawDiff: gitDiffRaw()})
-			time.Sleep(pause)
-		}
-	}()
-
-	if _, err := p.Run(); err != nil {
-		fmt.Println("could not run program:", err)
-		os.Exit(1)
-	}
 }
