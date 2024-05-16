@@ -8,7 +8,7 @@ import (
 
 func TestParseFile(t *testing.T) {
 	expected := "file"
-	actual, _ := parseFile("diff --git a/file b/file")
+	actual, _ := parseFile("+++ b/file")
 	if expected != actual.Name {
 		t.Fatalf(fmt.Sprintf("Expected: %s Actual: %s", expected, actual))
 	}
@@ -16,7 +16,7 @@ func TestParseFile(t *testing.T) {
 
 func TestParseFileWithExtension(t *testing.T) {
 	expected := "file.txt"
-	actual, _ := parseFile("diff --git a/file.txt b/file.txt")
+	actual, _ := parseFile("+++ b/file.txt")
 	if expected != actual.Name {
 		t.Fatalf(fmt.Sprintf("Expected: %s Actual: %s", expected, actual))
 	}
@@ -24,7 +24,7 @@ func TestParseFileWithExtension(t *testing.T) {
 
 func TestParseFileWithSlashes(t *testing.T) {
 	expected := "folder/file.txt"
-	actual, _ := parseFile("diff --git a/folder/file.txt b/folder/file.txt")
+	actual, _ := parseFile("+++ b/folder/file.txt")
 	if expected != actual.Name {
 		t.Fatalf(fmt.Sprintf("Expected: %s Actual: %s", expected, actual))
 	}
@@ -109,6 +109,7 @@ func TestParseLineNewPreamble(t *testing.T) {
 func TestParseDiff(t *testing.T) {
 	contents, _ := os.ReadFile("./test/one-file-one-block.diff")
 	actual, _ := ParseDiff(string(contents))
+
 	if len(actual.Files) != 1 {
 		t.Fatalf("Expected 1 file")
 	}
@@ -139,5 +140,16 @@ func TestParseDiffTwoFilesTwoBlocks(t *testing.T) {
 	}
 	if len(actual.Files[0].Blocks) != 2 {
 		t.Fatalf("Expected 2 Files, 2 Blocks")
+	}
+}
+
+func TestParseDiffNewFile(t *testing.T) {
+	contents, _ := os.ReadFile("./test/new-file.diff")
+	actual, _ := ParseDiff(string(contents))
+	if len(actual.Files) != 1 {
+		t.Fatalf("Expected 1 file")
+	}
+	if actual.Files[0].Name != ".gitignore" {
+		t.Fatalf("Expected filename .gitignore")
 	}
 }
