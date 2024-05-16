@@ -16,6 +16,7 @@ type Diff struct {
 	ready    bool
 	viewport viewport.Model
 	diff     parser.Diff
+	staged   bool
 }
 
 type TickMsg struct{}
@@ -38,7 +39,11 @@ func (m Diff) Init() tea.Cmd {
 func buildOutput(m Diff) string {
 	var content strings.Builder
 	if len(m.diff.Files) == 0 {
-		return "No diff to show! Working directory is clean."
+		if m.staged {
+			return "No changes staged..."
+		} else {
+			return "No diff to show! Working directory is clean."
+		}
 	}
 
 	for _, file := range m.diff.Files {
@@ -88,8 +93,15 @@ func (m Diff) Update(msg tea.Msg) (Diff, tea.Cmd) {
 	)
 
 	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		k := msg.String()
+		if k == "s" {
+			m.staged = !m.staged
+			cmd = m.Tick(true)
+			cmds = append(cmds, cmd)
+		}
 	case TickMsg:
-		m.diff, _ = parser.ParseDiff(gitDiffRaw())
+		m.diff, _ = parser.ParseDiff(m.gitDiffRaw())
 		m.viewport.SetContent(buildOutput(m))
 		return m, m.Tick()
 
@@ -112,11 +124,26 @@ func (m Diff) View() string {
 }
 
 func (m Diff) footerView() string {
-	return infoStyle.Render(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100))
+	help := "? toggle help "
+	info := infoStyle.Render(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100))
+	var cmd string
+	if m.staged {
+		cmd = "git diff --staged"
+	} else {
+		cmd = "git diff"
+	}
+	space := m.viewport.Width - lipgloss.Width(info) - lipgloss.Width(help) - lipgloss.Width(cmd)
+	line := strings.Repeat(" ", max(0, space))
+	return lipgloss.JoinHorizontal(lipgloss.Center, cmd, line, help, info)
 }
 
-func gitDiffRaw() string {
-	cmd := exec.Command("git", "diff")
+func (m Diff) gitDiffRaw() string {
+	var cmd *exec.Cmd
+	if m.staged {
+		cmd = exec.Command("git", "diff", "--staged")
+	} else {
+		cmd = exec.Command("git", "diff")
+	}
 	stdout, _ := cmd.Output()
 	return string(stdout)
 }

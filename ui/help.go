@@ -15,8 +15,11 @@ func (m Help) Init() tea.Cmd {
 func (m Help) Update(msg tea.Msg) (Help, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		if k := msg.String(); k == "?" {
+		k := msg.String()
+		if k == "?" {
 			m.isOpen = !m.isOpen
+		} else {
+			m.isOpen = false
 		}
 	}
 	return m, nil
@@ -24,7 +27,7 @@ func (m Help) Update(msg tea.Msg) (Help, tea.Cmd) {
 
 func (m Help) View() string {
 	if m.isOpen {
-		return "? toggle help\nq quit"
+		return "? toggle help\nq quit\ns toggle --staged"
 	} else {
 		return "? toggle help"
 	}
