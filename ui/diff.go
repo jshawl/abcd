@@ -120,17 +120,21 @@ func (m Diff) View() string {
 	if !m.ready {
 		return "\n  Initializing..."
 	}
+	return fmt.Sprintf("%s\n%s %s", m.viewport.View(), m.footerView())
+}
+
+func (m Diff) footerView() string {
+	help := "? toggle help "
+	info := infoStyle.Render(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100))
 	var cmd string
 	if m.staged {
 		cmd = "git diff --staged"
 	} else {
 		cmd = "git diff"
 	}
-	return fmt.Sprintf("%s\n%s %s", m.viewport.View(), m.footerView(), cmd)
-}
-
-func (m Diff) footerView() string {
-	return infoStyle.Render(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100))
+	space := m.viewport.Width - lipgloss.Width(info) - lipgloss.Width(help) - lipgloss.Width(cmd)
+	line := strings.Repeat(" ", max(0, space))
+	return lipgloss.JoinHorizontal(lipgloss.Center, cmd, line, help, info)
 }
 
 func (m Diff) gitDiffRaw() string {
