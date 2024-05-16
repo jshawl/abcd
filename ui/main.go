@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -44,11 +45,24 @@ func (m model) View() string {
 }
 
 func Render() {
+	if len(os.Getenv("DEBUG")) > 0 {
+		f, err := tea.LogToFile("debug.log", "debug")
+		f.Truncate(0)
+		f.Seek(0, 0)
+		if err != nil {
+			fmt.Println("fatal:", err)
+			os.Exit(1)
+		}
+		defer f.Close()
+	}
+
 	p := tea.NewProgram(
 		model{},
 		tea.WithAltScreen(),
 		tea.WithMouseCellMotion(),
 	)
+
+	log.Println("program starting...")
 
 	if _, err := p.Run(); err != nil {
 		fmt.Println("could not run program:", err)
