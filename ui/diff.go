@@ -120,7 +120,7 @@ func (m Diff) View() string {
 	if !m.ready {
 		return "\n  Initializing..."
 	}
-	return fmt.Sprintf("%s\n%s %s", m.viewport.View(), m.footerView())
+	return fmt.Sprintf("%s\n%s", m.viewport.View(), m.footerView())
 }
 
 func (m Diff) footerView() string {
