@@ -20,22 +20,19 @@ type Diff struct {
 
 type TickMsg struct{}
 
-func (m Diff) Tick() tea.Cmd {
+func (m Diff) Tick(immediately ...bool) tea.Cmd {
+	if len(immediately) > 0 {
+		return func() tea.Msg {
+			return TickMsg{}
+		}
+	}
 	return tea.Tick(time.Second, func(t time.Time) tea.Msg {
 		return TickMsg{}
 	})
 }
 
 func (m Diff) Init() tea.Cmd {
-	var (
-		cmd  tea.Cmd
-		cmds []tea.Cmd
-	)
-	cmd = func() tea.Msg {
-		return TickMsg{}
-	}
-	cmds = append(cmds, cmd, m.Tick())
-	return tea.Batch(cmds...)
+	return m.Tick()
 }
 
 func buildOutput(m Diff) string {
@@ -67,18 +64,20 @@ func buildOutput(m Diff) string {
 	return content.String()
 }
 
-func (m *Diff) windowSizeUpdate(msg tea.WindowSizeMsg) {
-	headerHeight := lipgloss.Height("\n")
-	footerHeight := lipgloss.Height("\n")
-	verticalMarginHeight := headerHeight + footerHeight
+func (m *Diff) windowSizeUpdate(msg tea.WindowSizeMsg) tea.Cmd {
+	footerHeight := lipgloss.Height(m.footerView())
+	helpHeight := lipgloss.Height("\n")
+	verticalMarginHeight := footerHeight + helpHeight - 2
 
 	if !m.ready {
 		m.viewport = viewport.New(msg.Width, msg.Height-verticalMarginHeight)
-		m.viewport.YPosition = headerHeight
+		m.viewport.YPosition = 0
 		m.ready = true
+		return m.Tick(true)
 	} else {
 		m.viewport.Width = msg.Width
 		m.viewport.Height = msg.Height - verticalMarginHeight
+		return nil
 	}
 }
 
@@ -95,7 +94,8 @@ func (m Diff) Update(msg tea.Msg) (Diff, tea.Cmd) {
 		return m, m.Tick()
 
 	case tea.WindowSizeMsg:
-		m.windowSizeUpdate(msg)
+		cmd = m.windowSizeUpdate(msg)
+		cmds = append(cmds, cmd)
 	}
 
 	m.viewport, cmd = m.viewport.Update(msg)
@@ -108,25 +108,11 @@ func (m Diff) View() string {
 	if !m.ready {
 		return "\n  Initializing..."
 	}
-	return fmt.Sprintf("%s\n%s\n%s", m.headerView(), m.viewport.View(), m.footerView())
-}
-
-func (m Diff) headerView() string {
-	title := titleStyle.Render("diffrn")
-	return lipgloss.JoinHorizontal(lipgloss.Center, title)
+	return fmt.Sprintf("%s\n%s", m.viewport.View(), m.footerView())
 }
 
 func (m Diff) footerView() string {
-	info := infoStyle.Render(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100))
-	line := strings.Repeat("─", max(0, m.viewport.Width-lipgloss.Width(info)))
-	return lipgloss.JoinHorizontal(lipgloss.Center, line, info)
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
+	return infoStyle.Render(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100))
 }
 
 func gitDiffRaw() string {
