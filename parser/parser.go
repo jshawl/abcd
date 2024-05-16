@@ -42,7 +42,7 @@ func parseBlock(line string) (Block, error) {
 }
 
 func parseFile(line string) (File, error) {
-	r := regexp.MustCompile(`diff --git a/([\w\.\/]+) b/`)
+	r := regexp.MustCompile(`^\+\+\+ b\/(.*)`)
 	matches := r.FindAllStringSubmatch(line, -1)
 	if len(matches) != 1 {
 		return File{}, errors.New("match not found")
@@ -59,18 +59,18 @@ func ParseDiff(lines string) (Diff, error) {
 	}
 	for _, v := range parsedLines {
 		file, _ := parseFile(v)
+		if file.Name == "" && len(diff.Files) == 0 {
+			continue
+		}
 		if file.Name != "" {
 			diff.Files = append(diff.Files, file)
 		}
 		lastFile := &diff.Files[len(diff.Files)-1]
-
 		block, _ := parseBlock(v)
 		if block.OldRange != "" {
 			lastFile.Blocks = append(lastFile.Blocks, block)
 		}
-
 		blocks := lastFile.Blocks
-
 		line, err := parseLine(v)
 		if err == nil {
 			blocks[len(blocks)-1].Lines = append(blocks[len(blocks)-1].Lines, line)

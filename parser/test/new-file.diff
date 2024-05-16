@@ -1,0 +1,6 @@
+new file mode 100644
+index 0000000..b14c548
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1 @@
++debug.log
