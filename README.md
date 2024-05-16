@@ -3,7 +3,7 @@
 ## CLI
 
 ```
-diffn [--staged] [treeish]
+diffrn [--staged] [treeish]
 ```
 
 opens a pager, watches for changes, and updates the diff

@@ -23,7 +23,5 @@ var hr = lipgloss.NewStyle().
 var titleStyle = lipgloss.NewStyle().Padding(0, 0)
 
 var infoStyle = func() lipgloss.Style {
-	b := lipgloss.RoundedBorder()
-	b.Left = "┤"
-	return titleStyle.Copy().BorderStyle(b)
+	return titleStyle.Copy()
 }()
