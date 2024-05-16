@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -12,18 +13,29 @@ import (
 )
 
 type Diff struct {
-	content  string
 	ready    bool
 	viewport viewport.Model
 	diff     parser.Diff
 }
 
-type refreshMsg struct {
-	rawDiff string
+type TickMsg struct{}
+
+func (m Diff) Tick() tea.Cmd {
+	return tea.Tick(time.Second, func(t time.Time) tea.Msg {
+		return TickMsg{}
+	})
 }
 
 func (m Diff) Init() tea.Cmd {
-	return nil
+	var (
+		cmd  tea.Cmd
+		cmds []tea.Cmd
+	)
+	cmd = func() tea.Msg {
+		return TickMsg{}
+	}
+	cmds = append(cmds, cmd, m.Tick())
+	return tea.Batch(cmds...)
 }
 
 func buildOutput(m Diff) string {
@@ -63,17 +75,11 @@ func (m *Diff) windowSizeUpdate(msg tea.WindowSizeMsg) {
 	if !m.ready {
 		m.viewport = viewport.New(msg.Width, msg.Height-verticalMarginHeight)
 		m.viewport.YPosition = headerHeight
-		m.viewport.SetContent(m.content)
 		m.ready = true
 	} else {
 		m.viewport.Width = msg.Width
 		m.viewport.Height = msg.Height - verticalMarginHeight
 	}
-}
-
-func (m *Diff) refreshUpdate(msg refreshMsg) {
-	m.diff, _ = parser.ParseDiff(msg.rawDiff)
-	m.viewport.SetContent(buildOutput(*m))
 }
 
 func (m Diff) Update(msg tea.Msg) (Diff, tea.Cmd) {
@@ -83,8 +89,10 @@ func (m Diff) Update(msg tea.Msg) (Diff, tea.Cmd) {
 	)
 
 	switch msg := msg.(type) {
-	case refreshMsg:
-		m.refreshUpdate(msg)
+	case TickMsg:
+		m.diff, _ = parser.ParseDiff(gitDiffRaw())
+		m.viewport.SetContent(buildOutput(m))
+		return m, m.Tick()
 
 	case tea.WindowSizeMsg:
 		m.windowSizeUpdate(msg)
