@@ -3,7 +3,6 @@ package ui
 import (
 	"fmt"
 	"os"
-	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -13,7 +12,7 @@ type model struct {
 }
 
 func (m model) Init() tea.Cmd {
-	return nil
+	return m.diff.Init()
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -43,14 +42,6 @@ func Render() {
 		tea.WithAltScreen(),
 		tea.WithMouseCellMotion(),
 	)
-
-	go func() {
-		for {
-			pause := time.Duration(1) * time.Second
-			p.Send(refreshMsg{rawDiff: gitDiffRaw()})
-			time.Sleep(pause)
-		}
-	}()
 
 	if _, err := p.Run(); err != nil {
 		fmt.Println("could not run program:", err)
