@@ -49,6 +49,7 @@ func Render() {
 		f, err := tea.LogToFile("debug.log", "debug")
 		f.Truncate(0)
 		f.Seek(0, 0)
+		log.Println("program starting...")
 		if err != nil {
 			fmt.Println("fatal:", err)
 			os.Exit(1)
@@ -61,8 +62,6 @@ func Render() {
 		tea.WithAltScreen(),
 		tea.WithMouseCellMotion(),
 	)
-
-	log.Println("program starting...")
 
 	if _, err := p.Run(); err != nil {
 		fmt.Println("could not run program:", err)

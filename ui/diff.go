@@ -15,8 +15,8 @@ import (
 type Diff struct {
 	ready    bool
 	viewport viewport.Model
-	diff     parser.Diff
 	staged   bool
+	files    []File
 }
 
 type TickMsg struct{}
@@ -36,37 +36,24 @@ func (m Diff) Init() tea.Cmd {
 	return m.Tick()
 }
 
-func buildOutput(m Diff) string {
-	var content strings.Builder
-	if len(m.diff.Files) == 0 {
-		if m.staged {
-			return "No changes staged..."
-		} else {
-			return "No diff to show! Working directory is clean."
-		}
+func (m Diff) ViewEmpty() string {
+	if m.staged {
+		return "No changes staged..."
+	} else {
+		return "No diff to show! Working directory is clean."
 	}
+}
 
-	for _, file := range m.diff.Files {
-		content.WriteString(fileStyle.Width(m.viewport.Width).Render(file.Name))
-		content.WriteString("\n")
-		for blockI, block := range file.Blocks {
-			for _, line := range block.Lines {
-				if strings.HasPrefix(line, "-") {
-					content.WriteString(removedStyle.Width(m.viewport.Width).Render(line))
-				} else if strings.HasPrefix(line, "+") {
-					content.WriteString(addedStyle.Width(m.viewport.Width).Render(line))
-				} else {
-					content.WriteString(line)
-				}
-				content.WriteString("\n")
-			}
-			if blockI < len(file.Blocks)-1 {
-				content.WriteString(hr.Render("···"))
-				content.WriteString("\n")
-			}
+func (m Diff) lines() string {
+	if len(m.files) == 0 {
+		return m.ViewEmpty()
+	} else {
+		var content strings.Builder
+		for _, file := range m.files {
+			content.WriteString(file.View(m.viewport.Width))
 		}
+		return content.String()
 	}
-	return content.String()
 }
 
 func (m *Diff) windowSizeUpdate(msg tea.WindowSizeMsg) tea.Cmd {
@@ -101,8 +88,12 @@ func (m Diff) Update(msg tea.Msg) (Diff, tea.Cmd) {
 			cmds = append(cmds, cmd)
 		}
 	case TickMsg:
-		m.diff, _ = parser.ParseDiff(m.gitDiffRaw())
-		m.viewport.SetContent(buildOutput(m))
+		diff, _ := parser.ParseDiff(m.gitDiffRaw())
+		m.files = []File{}
+		for _, file := range diff.Files {
+			m.files = append(m.files, NewFile(file))
+		}
+		m.viewport.SetContent(m.lines())
 		return m, m.Tick()
 
 	case tea.WindowSizeMsg:
