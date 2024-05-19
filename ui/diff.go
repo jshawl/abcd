@@ -9,7 +9,7 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	parser "github.com/jshawl/diffrn/parser"
+	parser "github.com/jshawl/abcd/parser"
 )
 
 type Diff struct {

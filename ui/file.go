@@ -3,7 +3,7 @@ package ui
 import (
 	"strings"
 
-	"github.com/jshawl/diffrn/parser"
+	"github.com/jshawl/abcd/parser"
 )
 
 type File struct {

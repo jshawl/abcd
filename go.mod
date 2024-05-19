@@ -1,4 +1,4 @@
-module diffrn
+module abcd
 
 go 1.21.6
 
@@ -6,7 +6,7 @@ require (
 	github.com/charmbracelet/bubbles v0.18.0
 	github.com/charmbracelet/bubbletea v0.26.2
 	github.com/charmbracelet/lipgloss v0.10.0
-	github.com/jshawl/diffrn v0.0.0
+	github.com/jshawl/abcd v0.0.0
 )
 
 require (
@@ -27,4 +27,4 @@ require (
 	golang.org/x/text v0.3.8 // indirect
 )
 
-replace github.com/jshawl/diffrn v0.0.0 => ./
+replace github.com/jshawl/abcd v0.0.0 => ./
