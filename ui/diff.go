@@ -13,10 +13,11 @@ import (
 )
 
 type Diff struct {
-	ready    bool
-	viewport viewport.Model
-	staged   bool
-	files    []File
+	ready       bool
+	viewport    viewport.Model
+	staged      bool
+	files       []File
+	currentFile int
 }
 
 type TickMsg struct{}
@@ -86,6 +87,20 @@ func (m Diff) Update(msg tea.Msg) (Diff, tea.Cmd) {
 			m.staged = !m.staged
 			cmd = m.Tick(true)
 			cmds = append(cmds, cmd)
+		}
+		if k == "tab" {
+			heights := []int{0}
+			for i := 0; i < len(m.files); i++ {
+				height := lipgloss.Height(m.files[i].View(m.viewport.Width)) - 1
+				total := height + heights[len(heights)-1]
+				heights = append(heights, total)
+			}
+
+			m.currentFile += 1
+			if m.currentFile == len(m.files) {
+				m.currentFile = 0
+			}
+			m.viewport.SetYOffset(heights[m.currentFile])
 		}
 	case TickMsg:
 		diff, _ := parser.ParseDiff(m.gitDiffRaw())

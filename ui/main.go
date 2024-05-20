@@ -58,7 +58,9 @@ func Render() {
 	}
 
 	p := tea.NewProgram(
-		model{},
+		model{
+			help: NewHelp(),
+		},
 		tea.WithAltScreen(),
 		tea.WithMouseCellMotion(),
 	)
