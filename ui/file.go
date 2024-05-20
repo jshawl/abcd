@@ -12,12 +12,6 @@ type File struct {
 	parser.File
 }
 
-type Block struct {
-	OldRange string
-	NewRange string
-	Lines    []string
-}
-
 func NewFile(file parser.File) File {
 	return File{
 		file,

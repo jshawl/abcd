@@ -18,10 +18,12 @@ type File struct {
 }
 
 type Block struct {
-	OldRange          string
-	NewRange          string
 	LargestLineNumber int
 	Lines             []Line
+	NewStart          int
+	NewEnd            int
+	OldStart          int
+	OldEnd            int
 }
 
 type Line struct {
@@ -38,14 +40,20 @@ func parseLine(line string) (string, error) {
 }
 
 func parseBlock(line string) (Block, error) {
-	r := regexp.MustCompile(`@@ -([0-9]+,[0-9]+) \+([0-9]+,?[0-9]*) @@`)
+	r := regexp.MustCompile(`^@@ -([0-9]+),([0-9]+) \+([0-9]+),?([0-9]*) @@`)
 	matches := r.FindAllStringSubmatch(line, -1)
 	if len(matches) != 1 {
 		return Block{}, errors.New("match not found")
 	}
-	oldRange := matches[0][1]
-	newRange := matches[0][2]
-	return Block{OldRange: oldRange, NewRange: newRange}, nil
+
+	OldStart, _ := strconv.Atoi(matches[0][1])
+	OldLines, _ := strconv.Atoi(matches[0][2])
+	OldEnd := OldStart + OldLines
+	NewStart, _ := strconv.Atoi(matches[0][3])
+	NewLines, _ := strconv.Atoi(matches[0][4])
+	NewEnd := NewStart + NewLines
+
+	return Block{OldStart: OldStart, OldEnd: OldEnd, NewStart: NewStart, NewEnd: NewEnd}, nil
 }
 
 func parseFile(line string) (File, error) {
@@ -77,19 +85,11 @@ func ParseDiff(lines string) (Diff, error) {
 			diff.Files = append(diff.Files, file)
 		}
 		lastFile := &diff.Files[len(diff.Files)-1]
-		block, _ := parseBlock(v)
-		if block.OldRange != "" {
-			newStart := strings.Split(block.NewRange, ",")
-			nlc, _ := strconv.Atoi(newStart[0])
-			if len(newStart) == 1 {
-				newStart = append(newStart, "1")
-			}
-			nlce, _ := strconv.Atoi(newStart[1])
-			oldStart := strings.Split(block.OldRange, ",")
-			olc, _ := strconv.Atoi(oldStart[0])
-			newLineCounter = nlc
-			oldLineCounter = olc
-			block.LargestLineNumber = nlc + nlce
+		block, err := parseBlock(v)
+		if err == nil {
+			newLineCounter = block.NewStart
+			oldLineCounter = block.OldStart
+			block.LargestLineNumber = block.NewEnd
 			lastFile.Blocks = append(lastFile.Blocks, block)
 		}
 		blocks := lastFile.Blocks
