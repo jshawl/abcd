@@ -2,6 +2,8 @@
 
 A Better Console Diff
 
+![](./demo.gif)
+
 ## CLI
 
 ```
