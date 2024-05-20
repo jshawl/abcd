@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -19,7 +20,12 @@ type File struct {
 type Block struct {
 	OldRange string
 	NewRange string
-	Lines    []string
+	Lines    []Line
+}
+
+type Line struct {
+	Number  int
+	Content string
 }
 
 func parseLine(line string) (string, error) {
@@ -57,6 +63,10 @@ func ParseDiff(lines string) (Diff, error) {
 	for sc.Scan() {
 		parsedLines = append(parsedLines, sc.Text())
 	}
+	var (
+		oldLineCounter int
+		newLineCounter int
+	)
 	for _, v := range parsedLines {
 		file, _ := parseFile(v)
 		if file.Name == "" && len(diff.Files) == 0 {
@@ -69,11 +79,31 @@ func ParseDiff(lines string) (Diff, error) {
 		block, _ := parseBlock(v)
 		if block.OldRange != "" {
 			lastFile.Blocks = append(lastFile.Blocks, block)
+			newStart := strings.Split(block.NewRange, ",")
+			nlc, _ := strconv.Atoi(newStart[0])
+			oldStart := strings.Split(block.OldRange, ",")
+			olc, _ := strconv.Atoi(oldStart[0])
+			newLineCounter = nlc
+			oldLineCounter = olc
 		}
 		blocks := lastFile.Blocks
 		line, err := parseLine(v)
 		if err == nil {
-			blocks[len(blocks)-1].Lines = append(blocks[len(blocks)-1].Lines, line)
+
+			l := Line{Content: line}
+
+			if strings.HasPrefix(line, "-") {
+				l.Number = oldLineCounter
+				newLineCounter--
+			} else if strings.HasPrefix(line, "+") {
+				l.Number = newLineCounter
+				oldLineCounter--
+			} else {
+				l.Number = newLineCounter
+			}
+			blocks[len(blocks)-1].Lines = append(blocks[len(blocks)-1].Lines, l)
+			newLineCounter++
+			oldLineCounter++
 		}
 	}
 	return diff, nil
