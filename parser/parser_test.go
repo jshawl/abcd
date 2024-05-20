@@ -39,21 +39,33 @@ func TestParseFileOnNonFile(t *testing.T) {
 
 func TestParseBlockWithAddedLines(t *testing.T) {
 	actual, _ := parseBlock("@@ -0,0 +1 @@")
-	if actual.OldRange != "0,0" {
-		t.Fatalf("Expected old range to be '0,0'")
+	if actual.OldStart != 0 {
+		t.Fatalf("Expected OldStart to be 1")
 	}
-	if actual.NewRange != "1" {
-		t.Fatalf("Expected new range to be '1'")
+	if actual.OldEnd != 0 {
+		t.Fatalf("Expected OldEnd to be 0")
+	}
+	if actual.NewStart != 1 {
+		t.Fatalf("Expected NewStart to be 1")
+	}
+	if actual.NewEnd != 1 {
+		t.Fatalf("Expected NewEnd to be 1")
 	}
 }
 
 func TestParseBlockWithChangedLines(t *testing.T) {
 	actual, _ := parseBlock("@@ -1,4 +1,4 @@")
-	if actual.OldRange != "1,4" {
-		t.Fatalf("Expected old range to be '1,4'")
+	if actual.OldStart != 1 {
+		t.Fatalf("Expected OldStart to be 1")
 	}
-	if actual.NewRange != "1,4" {
-		t.Fatalf("Expected new range to be '1,4'")
+	if actual.OldEnd != 5 {
+		t.Fatalf("Expected OldEnd to be 5")
+	}
+	if actual.NewStart != 1 {
+		t.Fatalf("Expected NewStart to be 1")
+	}
+	if actual.NewEnd != 5 {
+		t.Fatalf("Expected NewEnd to be 5")
 	}
 }
 
