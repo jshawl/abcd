@@ -81,6 +81,9 @@ func ParseDiff(lines string) (Diff, error) {
 		if block.OldRange != "" {
 			newStart := strings.Split(block.NewRange, ",")
 			nlc, _ := strconv.Atoi(newStart[0])
+			if len(newStart) == 1 {
+				newStart = append(newStart, "1")
+			}
 			nlce, _ := strconv.Atoi(newStart[1])
 			oldStart := strings.Split(block.OldRange, ",")
 			olc, _ := strconv.Atoi(oldStart[0])
