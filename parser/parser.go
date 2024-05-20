@@ -18,9 +18,10 @@ type File struct {
 }
 
 type Block struct {
-	OldRange string
-	NewRange string
-	Lines    []Line
+	OldRange          string
+	NewRange          string
+	LargestLineNumber int
+	Lines             []Line
 }
 
 type Line struct {
@@ -78,13 +79,15 @@ func ParseDiff(lines string) (Diff, error) {
 		lastFile := &diff.Files[len(diff.Files)-1]
 		block, _ := parseBlock(v)
 		if block.OldRange != "" {
-			lastFile.Blocks = append(lastFile.Blocks, block)
 			newStart := strings.Split(block.NewRange, ",")
 			nlc, _ := strconv.Atoi(newStart[0])
+			nlce, _ := strconv.Atoi(newStart[1])
 			oldStart := strings.Split(block.OldRange, ",")
 			olc, _ := strconv.Atoi(oldStart[0])
 			newLineCounter = nlc
 			oldLineCounter = olc
+			block.LargestLineNumber = nlc + nlce
+			lastFile.Blocks = append(lastFile.Blocks, block)
 		}
 		blocks := lastFile.Blocks
 		line, err := parseLine(v)

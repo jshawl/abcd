@@ -32,19 +32,16 @@ func (m File) View(viewportWidth int) string {
 	content.WriteString("\n")
 	for blockI, block := range m.Blocks {
 		for _, line := range block.Lines {
+			largestLineNumber := fmt.Sprintf("%d", block.LargestLineNumber)
+			fmtString := fmt.Sprintf("%%%dd ", lipgloss.Width(largestLineNumber))
+			lineNumber := lineNumberStyle.Render(fmt.Sprintf(fmtString, line.Number))
+			width := viewportWidth - lipgloss.Width(largestLineNumber) - 1
+			content.WriteString(lineNumber)
 			if strings.HasPrefix(line.Content, "-") {
-				lineNumber := lineNumberStyle.Render(fmt.Sprintf("%d ", line.Number))
-				width := viewportWidth - lipgloss.Width(lineNumber)
-				content.WriteString(lineNumber)
 				content.WriteString(removedStyle.Width(width).Render(line.Content))
 			} else if strings.HasPrefix(line.Content, "+") {
-				lineNumber := lineNumberStyle.Render(fmt.Sprintf("%d ", line.Number))
-				width := viewportWidth - lipgloss.Width(lineNumber)
-				content.WriteString(lineNumber)
 				content.WriteString(addedStyle.Width(width).Render(line.Content))
 			} else {
-				lineNumber := lineNumberStyle.Render(fmt.Sprintf("%d ", line.Number))
-				content.WriteString(lineNumber)
 				content.WriteString(line.Content)
 			}
 			content.WriteString("\n")
