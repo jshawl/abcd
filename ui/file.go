@@ -1,8 +1,10 @@
 package ui
 
 import (
+	"fmt"
 	"strings"
 
+	"github.com/charmbracelet/lipgloss"
 	"github.com/jshawl/abcd/parser"
 )
 
@@ -22,18 +24,25 @@ func NewFile(file parser.File) File {
 	}
 }
 
+var lineNumberStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#aaa"))
+
 func (m File) View(viewportWidth int) string {
 	var content strings.Builder
 	content.WriteString(fileStyle.Width(viewportWidth).Render(m.Name))
 	content.WriteString("\n")
 	for blockI, block := range m.Blocks {
 		for _, line := range block.Lines {
-			if strings.HasPrefix(line, "-") {
-				content.WriteString(removedStyle.Width(viewportWidth).Render(line))
-			} else if strings.HasPrefix(line, "+") {
-				content.WriteString(addedStyle.Width(viewportWidth).Render(line))
+			largestLineNumber := fmt.Sprintf("%d", block.LargestLineNumber)
+			fmtString := fmt.Sprintf("%%%dd ", lipgloss.Width(largestLineNumber))
+			lineNumber := lineNumberStyle.Render(fmt.Sprintf(fmtString, line.Number))
+			width := viewportWidth - lipgloss.Width(largestLineNumber) - 1
+			content.WriteString(lineNumber)
+			if strings.HasPrefix(line.Content, "-") {
+				content.WriteString(removedStyle.Width(width).Render(line.Content))
+			} else if strings.HasPrefix(line.Content, "+") {
+				content.WriteString(addedStyle.Width(width).Render(line.Content))
 			} else {
-				content.WriteString(line)
+				content.WriteString(line.Content)
 			}
 			content.WriteString("\n")
 		}

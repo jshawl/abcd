@@ -10,7 +10,7 @@ func TestParseFile(t *testing.T) {
 	expected := "file"
 	actual, _ := parseFile("+++ b/file")
 	if expected != actual.Name {
-		t.Fatalf(fmt.Sprintf("Expected: %s Actual: %s", expected, actual))
+		t.Fatalf(fmt.Sprintf("Expected: %s Actual: %s", expected, actual.Name))
 	}
 }
 
@@ -18,7 +18,7 @@ func TestParseFileWithExtension(t *testing.T) {
 	expected := "file.txt"
 	actual, _ := parseFile("+++ b/file.txt")
 	if expected != actual.Name {
-		t.Fatalf(fmt.Sprintf("Expected: %s Actual: %s", expected, actual))
+		t.Fatalf(fmt.Sprintf("Expected: %s Actual: %s", expected, actual.Name))
 	}
 }
 
@@ -26,7 +26,7 @@ func TestParseFileWithSlashes(t *testing.T) {
 	expected := "folder/file.txt"
 	actual, _ := parseFile("+++ b/folder/file.txt")
 	if expected != actual.Name {
-		t.Fatalf(fmt.Sprintf("Expected: %s Actual: %s", expected, actual))
+		t.Fatalf(fmt.Sprintf("Expected: %s Actual: %s", expected, actual.Name))
 	}
 }
 
