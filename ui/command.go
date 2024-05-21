@@ -5,12 +5,12 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type Command struct {
 	isOpen bool
 	form   *huh.Form
-	cmd    string
 }
 
 type commandMsg string
@@ -26,7 +26,7 @@ func NewCommand(args []string) Command {
 		huh.NewGroup(
 			huh.NewInput().
 				Key("cmd").
-				Title("Set command:").
+				Title("Change command:").
 				Prompt("git diff ").
 				Value(&cur),
 		),
@@ -65,5 +65,6 @@ func (m Command) Update(msg tea.Msg) (Command, tea.Cmd) {
 }
 
 func (m Command) View() string {
-	return m.form.View()
+	style := lipgloss.NewStyle().Padding(1, 2)
+	return style.Render(m.form.View())
 }
