@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"log"
 	"os/exec"
 	"strings"
 	"time"
@@ -18,6 +19,7 @@ type Diff struct {
 	staged      bool
 	files       []File
 	currentFile int
+	args        []string
 }
 
 type TickMsg struct{}
@@ -31,6 +33,11 @@ func (m Diff) Tick(immediately ...bool) tea.Cmd {
 	return tea.Tick(time.Second, func(t time.Time) tea.Msg {
 		return TickMsg{}
 	})
+}
+
+func NewDiff(staged bool, args []string) Diff {
+	log.Println("args:", args)
+	return Diff{staged: staged, args: args}
 }
 
 func (m Diff) Init() tea.Cmd {
@@ -134,9 +141,11 @@ func (m Diff) footerView() string {
 	info := infoStyle.Render(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100))
 	var cmd string
 	if m.staged {
-		cmd = "git diff --staged"
+		cmds := append([]string{"git", "diff", "--staged"}, m.args...)
+		cmd = strings.Join(cmds, " ")
 	} else {
-		cmd = "git diff"
+		cmds := append([]string{"git", "diff"}, m.args...)
+		cmd = strings.Join(cmds, " ")
 	}
 	space := m.viewport.Width - lipgloss.Width(info) - lipgloss.Width(help) - lipgloss.Width(cmd)
 	line := strings.Repeat(" ", max(0, space))
@@ -145,10 +154,13 @@ func (m Diff) footerView() string {
 
 func (m Diff) gitDiffRaw() string {
 	var cmd *exec.Cmd
+
 	if m.staged {
-		cmd = exec.Command("git", "diff", "--staged")
+		cmds := append([]string{"diff", "--staged"}, m.args...)
+		cmd = exec.Command("git", cmds[:]...)
 	} else {
-		cmd = exec.Command("git", "diff")
+		cmds := append([]string{"diff"}, m.args...)
+		cmd = exec.Command("git", cmds[:]...)
 	}
 	stdout, _ := cmd.Output()
 	return string(stdout)
