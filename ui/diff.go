@@ -111,7 +111,7 @@ func (m Diff) Update(msg tea.Msg) (Diff, tea.Cmd) {
 			}
 
 			m.currentFile += 1
-			if m.currentFile == len(m.files) {
+			if m.currentFile == len(m.files) || m.viewport.AtBottom() {
 				m.currentFile = 0
 			}
 			m.viewport.SetYOffset(heights[m.currentFile])
