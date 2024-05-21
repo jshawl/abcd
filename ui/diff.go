@@ -2,7 +2,6 @@ package ui
 
 import (
 	"fmt"
-	"log"
 	"os/exec"
 	"strings"
 	"time"
@@ -36,7 +35,6 @@ func (m Diff) Tick(immediately ...bool) tea.Cmd {
 }
 
 func NewDiff(staged bool, args []string) Diff {
-	log.Println("args:", args)
 	return Diff{staged: staged, args: args}
 }
 
@@ -154,7 +152,6 @@ func (m Diff) footerView() string {
 
 func (m Diff) gitDiffRaw() string {
 	var cmd *exec.Cmd
-
 	if m.staged {
 		cmds := append([]string{"diff", "--staged"}, m.args...)
 		cmd = exec.Command("git", cmds[:]...)
