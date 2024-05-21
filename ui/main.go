@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -57,9 +58,13 @@ func Render() {
 		defer f.Close()
 	}
 
+	staged := flag.Bool("staged", false, "diff --staged ?")
+	flag.Parse()
+
 	p := tea.NewProgram(
 		model{
 			help: NewHelp(),
+			diff: NewDiff(*staged, flag.Args()),
 		},
 		tea.WithAltScreen(),
 		tea.WithMouseCellMotion(),

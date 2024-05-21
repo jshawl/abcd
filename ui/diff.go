@@ -18,9 +18,19 @@ type Diff struct {
 	staged      bool
 	files       []File
 	currentFile int
+	args        []string
 }
 
 type TickMsg struct{}
+
+func (m Diff) command() []string {
+	cmd := []string{"git", "diff"}
+	if m.staged {
+		cmd = append(cmd, "--staged")
+	}
+	cmd = append(cmd, m.args...)
+	return cmd
+}
 
 func (m Diff) Tick(immediately ...bool) tea.Cmd {
 	if len(immediately) > 0 {
@@ -31,6 +41,10 @@ func (m Diff) Tick(immediately ...bool) tea.Cmd {
 	return tea.Tick(time.Second, func(t time.Time) tea.Msg {
 		return TickMsg{}
 	})
+}
+
+func NewDiff(staged bool, args []string) Diff {
+	return Diff{staged: staged, args: args}
 }
 
 func (m Diff) Init() tea.Cmd {
@@ -132,12 +146,7 @@ func (m Diff) View() string {
 func (m Diff) footerView() string {
 	help := "? toggle help "
 	info := infoStyle.Render(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100))
-	var cmd string
-	if m.staged {
-		cmd = "git diff --staged"
-	} else {
-		cmd = "git diff"
-	}
+	cmd := strings.Join(m.command(), " ")
 	space := m.viewport.Width - lipgloss.Width(info) - lipgloss.Width(help) - lipgloss.Width(cmd)
 	line := strings.Repeat(" ", max(0, space))
 	return lipgloss.JoinHorizontal(lipgloss.Center, cmd, line, help, info)
@@ -145,11 +154,8 @@ func (m Diff) footerView() string {
 
 func (m Diff) gitDiffRaw() string {
 	var cmd *exec.Cmd
-	if m.staged {
-		cmd = exec.Command("git", "diff", "--staged")
-	} else {
-		cmd = exec.Command("git", "diff")
-	}
+	cmds := m.command()
+	cmd = exec.Command(cmds[0], cmds[1:]...)
 	stdout, _ := cmd.Output()
 	return string(stdout)
 }
