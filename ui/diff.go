@@ -118,6 +118,8 @@ func (m Diff) Update(msg tea.Msg) (Diff, tea.Cmd) {
 	)
 
 	switch msg := msg.(type) {
+	case commandMsg:
+		m.args = strings.Split(string(msg), " ")
 	case tea.KeyMsg:
 		k := msg.String()
 		if k == "s" {

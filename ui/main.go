@@ -10,12 +10,13 @@ import (
 )
 
 type model struct {
-	diff Diff
-	help Help
+	command Command
+	diff    Diff
+	help    Help
 }
 
 func (m model) Init() tea.Cmd {
-	return m.diff.Init()
+	return tea.Batch(m.diff.Init(), m.command.Init())
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -31,6 +32,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.help, _ = m.help.Update(msg)
 	}
 
+	m.command, cmd = m.command.Update(msg)
+	cmds = append(cmds, cmd)
+
 	m.diff, cmd = m.diff.Update(msg)
 	cmds = append(cmds, cmd)
 
@@ -38,11 +42,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
+	if m.command.isOpen {
+		return m.command.View()
+	}
 	if m.help.isOpen {
 		return m.help.View()
-	} else {
-		return fmt.Sprintf("%s %s", m.diff.View(), m.help.View())
 	}
+
+	return fmt.Sprintf("%s %s", m.diff.View(), m.help.View())
 }
 
 func Render() {
@@ -61,10 +68,13 @@ func Render() {
 	staged := flag.Bool("staged", false, "diff --staged ?")
 	flag.Parse()
 
+	args := flag.Args()
+
 	p := tea.NewProgram(
 		model{
-			help: NewHelp(),
-			diff: NewDiff(*staged, flag.Args()),
+			help:    NewHelp(),
+			diff:    NewDiff(*staged, args),
+			command: NewCommand(args),
 		},
 		tea.WithAltScreen(),
 		tea.WithMouseCellMotion(),
