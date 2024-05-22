@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"os/exec"
+	"slices"
 	"strings"
 	"time"
 
@@ -88,6 +89,28 @@ func (m *Diff) windowSizeUpdate(msg tea.WindowSizeMsg) tea.Cmd {
 	}
 }
 
+func (m Diff) FileHeights() []int {
+	heights := []int{0}
+	for i := range m.files {
+		height := m.files[i].Height(m.viewport.Width) - 1
+		total := height + heights[len(heights)-1]
+		heights = append(heights, total)
+	}
+	return heights
+}
+
+func (m Diff) getFileIndexInViewport() int {
+	index := slices.IndexFunc(m.FileHeights(), func(i int) bool {
+		offset := m.viewport.YOffset - 1
+		return offset-i <= -2
+	}) - 1
+
+	if index >= 0 && len(m.files) > 0 {
+		return index
+	}
+	return m.currentFile
+}
+
 func (m Diff) Update(msg tea.Msg) (Diff, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
@@ -102,19 +125,25 @@ func (m Diff) Update(msg tea.Msg) (Diff, tea.Cmd) {
 			cmd = m.Tick(true)
 			cmds = append(cmds, cmd)
 		}
-		if k == "tab" {
-			heights := []int{0}
-			for i := 0; i < len(m.files); i++ {
-				height := lipgloss.Height(m.files[i].View(m.viewport.Width)) - 1
-				total := height + heights[len(heights)-1]
-				heights = append(heights, total)
+		if k == "shift+tab" {
+			// decrement the current file only if the first line of the
+			// file is visible in the viewport. If the viewport has scrolled
+			// past the top of the file, shift+tab should scroll to the top
+			// of the file.
+			if slices.Contains(m.FileHeights(), m.viewport.YOffset) {
+				m.currentFile -= 1
+				if m.currentFile < 0 || m.viewport.AtTop() {
+					m.currentFile = len(m.files) - 1
+				}
 			}
-
+			m.viewport.SetYOffset(m.FileHeights()[m.currentFile])
+		}
+		if k == "tab" {
 			m.currentFile += 1
 			if m.currentFile == len(m.files) || m.viewport.AtBottom() {
 				m.currentFile = 0
 			}
-			m.viewport.SetYOffset(heights[m.currentFile])
+			m.viewport.SetYOffset(m.FileHeights()[m.currentFile])
 		}
 	case TickMsg:
 		diff, _ := parser.ParseDiff(m.gitDiffRaw())
@@ -129,6 +158,8 @@ func (m Diff) Update(msg tea.Msg) (Diff, tea.Cmd) {
 		cmd = m.windowSizeUpdate(msg)
 		cmds = append(cmds, cmd)
 	}
+
+	m.currentFile = m.getFileIndexInViewport()
 
 	m.viewport, cmd = m.viewport.Update(msg)
 	cmds = append(cmds, cmd)

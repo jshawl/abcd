@@ -20,6 +20,10 @@ func NewFile(file parser.File) File {
 
 var lineNumberStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#aaa"))
 
+func (m File) Height(viewportWidth int) int {
+	return lipgloss.Height(m.View(viewportWidth))
+}
+
 func (m File) View(viewportWidth int) string {
 	var content strings.Builder
 	content.WriteString(fileStyle.Width(viewportWidth).Render(m.Name))
