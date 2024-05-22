@@ -20,6 +20,7 @@ func NewHelp() Help {
 			"?":   "toggle help",
 			"q":   "quit",
 			"s":   "toggle --staged",
+			"c":   "change git diff command arguments",
 			"tab": "jump to next file",
 		},
 	}
