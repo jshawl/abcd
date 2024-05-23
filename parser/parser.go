@@ -89,7 +89,7 @@ func ParseDiff(lines string) (Diff, error) {
 		if err == nil {
 			newLineCounter = block.NewStart
 			oldLineCounter = block.OldStart
-			block.LargestLineNumber = block.NewEnd
+			block.LargestLineNumber = max(block.NewEnd, block.OldEnd)
 			lastFile.Blocks = append(lastFile.Blocks, block)
 		}
 		blocks := lastFile.Blocks
