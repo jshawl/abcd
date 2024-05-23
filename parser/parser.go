@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -57,7 +58,7 @@ func parseBlock(line string) (Block, error) {
 }
 
 func parseFile(line string) (File, error) {
-	r := regexp.MustCompile(`^\+\+\+ b\/(.*)`)
+	r := regexp.MustCompile(`^(?:\-\-\- a\/|\+\+\+ b\/)(.*)`)
 	matches := r.FindAllStringSubmatch(line, -1)
 	if len(matches) != 1 {
 		return File{}, errors.New("match not found")
@@ -82,7 +83,15 @@ func ParseDiff(lines string) (Diff, error) {
 			continue
 		}
 		if file.Name != "" {
-			diff.Files = append(diff.Files, file)
+			fileExists := slices.ContainsFunc(diff.Files, func(f File) bool {
+				return f.Name == file.Name
+			})
+			// the file name might have been identified with
+			// `--- a/(.*)` or `+++ b/(.*)` but if identified with both,
+			// don't append a second file with the same name.
+			if !fileExists {
+				diff.Files = append(diff.Files, file)
+			}
 		}
 		lastFile := &diff.Files[len(diff.Files)-1]
 		block, err := parseBlock(v)
