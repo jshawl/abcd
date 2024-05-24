@@ -165,3 +165,11 @@ func TestParseDiffNewFile(t *testing.T) {
 		t.Fatalf("Expected filename .gitignore")
 	}
 }
+
+func TestParseDiffDeletedFile(t *testing.T) {
+	contents, _ := os.ReadFile("./test/deleted-file.diff")
+	actual, _ := ParseDiff(string(contents))
+	if len(actual.Files) != 1 {
+		t.Fatalf("Expected 1 file")
+	}
+}
