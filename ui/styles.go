@@ -9,11 +9,11 @@ var fileStyle = lipgloss.NewStyle().
 	Width(100)
 
 var removedStyle = lipgloss.NewStyle().
-	Background(lipgloss.Color("#ffe8e7")).
+	Background(lipgloss.Color("#ffebeb")).
 	Width(100)
 
 var addedStyle = lipgloss.NewStyle().
-	Background(lipgloss.Color("#f0f8ec")).
+	Background(lipgloss.Color("#f4f8f1")).
 	Width(100)
 
 var hr = lipgloss.NewStyle().
