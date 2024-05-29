@@ -39,22 +39,27 @@ func (m Help) Update(msg tea.Msg) (Help, tea.Cmd) {
 			m.isOpen = false
 		}
 	}
+
 	return m, nil
 }
 
 func (m Help) View() string {
 	var content strings.Builder
+
 	if m.isOpen {
 		keys := make([]string, 0)
 		for key := range m.keys {
 			keys = append(keys, key)
 		}
+
 		sort.Strings(keys)
+
 		for _, key := range keys {
 			content.WriteString(fmt.Sprintf("%s\t%s\n", key, m.keys[key]))
 		}
+
 		return content.String()
-	} else {
-		return "? toggle help"
 	}
+
+	return "? toggle help"
 }
