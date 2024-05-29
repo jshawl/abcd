@@ -28,6 +28,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if k := msg.String(); k == "ctrl+c" || k == "q" || k == "esc" {
 			return m, tea.Quit
 		}
+
 		m.help, _ = m.help.Update(msg)
 	}
 
@@ -40,28 +41,34 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m model) View() string {
 	if m.help.isOpen {
 		return m.help.View()
-	} else {
-		return fmt.Sprintf("%s %s", m.diff.View(), m.help.View())
 	}
+
+	return fmt.Sprintf("%s %s", m.diff.View(), m.help.View())
 }
 
 func Render() {
 	if len(os.Getenv("DEBUG")) > 0 {
-		f, err := tea.LogToFile("debug.log", "debug")
-		f.Truncate(0)
-		f.Seek(0, 0)
+		file, err := tea.LogToFile("debug.log", "debug")
+		_ = file.Truncate(0)
+		_, _ = file.Seek(0, 0)
+
 		log.Println("program starting...")
+
 		if err != nil {
-			fmt.Println("fatal:", err)
-			os.Exit(1)
+			fmt.Println("fatal:", err) //nolint:forbidigo
+
+			defer func() {
+				os.Exit(1)
+			}()
 		}
-		defer f.Close()
+
+		defer file.Close()
 	}
 
 	staged := flag.Bool("staged", false, "diff --staged ?")
 	flag.Parse()
 
-	p := tea.NewProgram(
+	program := tea.NewProgram(
 		model{
 			help: NewHelp(),
 			diff: NewDiff(*staged, flag.Args()),
@@ -70,8 +77,11 @@ func Render() {
 		tea.WithMouseCellMotion(),
 	)
 
-	if _, err := p.Run(); err != nil {
-		fmt.Println("could not run program:", err)
-		os.Exit(1)
+	if _, err := program.Run(); err != nil {
+		fmt.Println("could not run program:", err) //nolint:forbidigo
+
+		defer func() {
+			os.Exit(1)
+		}()
 	}
 }

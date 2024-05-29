@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -26,28 +27,36 @@ func (m File) Height(viewportWidth int) int {
 
 func (m File) View(viewportWidth int) string {
 	var content strings.Builder
+
 	content.WriteString(fileStyle.Width(viewportWidth).Render(m.Name))
 	content.WriteString("\n")
+
 	for blockI, block := range m.Blocks {
 		for _, line := range block.Lines {
-			largestLineNumber := fmt.Sprintf("%d", block.LargestLineNumber)
+			largestLineNumber := strconv.Itoa(block.LargestLineNumber)
 			fmtString := fmt.Sprintf("%%%dd ", lipgloss.Width(largestLineNumber))
 			lineNumber := lineNumberStyle.Render(fmt.Sprintf(fmtString, line.Number))
 			width := viewportWidth - lipgloss.Width(largestLineNumber) - 1
+
 			content.WriteString(lineNumber)
-			if strings.HasPrefix(line.Content, "-") {
+
+			switch {
+			case strings.HasPrefix(line.Content, "-"):
 				content.WriteString(removedStyle.Width(width).Render(line.Content))
-			} else if strings.HasPrefix(line.Content, "+") {
+			case strings.HasPrefix(line.Content, "+"):
 				content.WriteString(addedStyle.Width(width).Render(line.Content))
-			} else {
+			default:
 				content.WriteString(line.Content)
 			}
+
 			content.WriteString("\n")
 		}
+
 		if blockI < len(m.Blocks)-1 {
 			content.WriteString(hr.Width(viewportWidth).Render("···"))
 			content.WriteString("\n")
 		}
 	}
+
 	return content.String()
 }

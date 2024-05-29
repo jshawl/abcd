@@ -32,19 +32,21 @@ type Line struct {
 	Content string
 }
 
-func parseLine(line string) (string, error) {
+func ParseLine(line string) (string, error) {
 	r := regexp.MustCompile(`^(diff|index|---|\+\+\+|@@)`)
 	if !r.MatchString(line) {
 		return line, nil
 	}
-	return "", errors.New("no match")
+
+	return "", MatchError()
 }
 
-func parseBlock(line string) (Block, error) {
+func ParseBlock(line string) (Block, error) {
 	r := regexp.MustCompile(`^@@ -([0-9]+),([0-9]+) \+([0-9]+),?([0-9]*) @@`)
 	matches := r.FindAllStringSubmatch(line, -1)
+
 	if len(matches) != 1 {
-		return Block{}, errors.New("match not found")
+		return Block{}, MatchError()
 	}
 
 	OldStart, _ := strconv.Atoi(matches[0][1])
@@ -54,34 +56,51 @@ func parseBlock(line string) (Block, error) {
 	NewLines, _ := strconv.Atoi(matches[0][4])
 	NewEnd := NewStart + NewLines
 
-	return Block{OldStart: OldStart, OldEnd: OldEnd, NewStart: NewStart, NewEnd: NewEnd}, nil
+	return Block{
+		OldStart:          OldStart,
+		OldEnd:            OldEnd,
+		NewStart:          NewStart,
+		NewEnd:            NewEnd,
+		LargestLineNumber: 0,
+		Lines:             []Line{},
+	}, nil
 }
 
-func parseFile(line string) (File, error) {
+func ParseFile(line string) (File, error) {
 	r := regexp.MustCompile(`^(?:\-\-\- a\/|\+\+\+ b\/)(.*)`)
 	matches := r.FindAllStringSubmatch(line, -1)
+
 	if len(matches) != 1 {
-		return File{}, errors.New("match not found")
+		return File{}, MatchError()
 	}
-	return File{Name: matches[0][1]}, nil
+
+	return File{Name: matches[0][1], Blocks: []Block{}}, nil
 }
 
 func ParseDiff(lines string) (Diff, error) {
-	diff := Diff{}
 	var parsedLines []string
+
+	diff := Diff{
+		Files: []File{},
+	}
 	sc := bufio.NewScanner(strings.NewReader(lines))
+
 	for sc.Scan() {
 		parsedLines = append(parsedLines, sc.Text())
 	}
+
 	var (
 		oldLineCounter int
 		newLineCounter int
 	)
-	for _, v := range parsedLines {
-		file, _ := parseFile(v)
+
+	for _, value := range parsedLines {
+		file, _ := ParseFile(value)
+
 		if file.Name == "" && len(diff.Files) == 0 {
 			continue
 		}
+
 		if file.Name != "" {
 			fileExists := slices.ContainsFunc(diff.Files, func(f File) bool {
 				return f.Name == file.Name
@@ -93,33 +112,44 @@ func ParseDiff(lines string) (Diff, error) {
 				diff.Files = append(diff.Files, file)
 			}
 		}
+
 		lastFile := &diff.Files[len(diff.Files)-1]
-		block, err := parseBlock(v)
+		block, err := ParseBlock(value)
+
 		if err == nil {
 			newLineCounter = block.NewStart
 			oldLineCounter = block.OldStart
 			block.LargestLineNumber = max(block.NewEnd, block.OldEnd)
 			lastFile.Blocks = append(lastFile.Blocks, block)
 		}
-		blocks := lastFile.Blocks
-		line, err := parseLine(v)
-		if err == nil {
 
-			l := Line{Content: line}
+		blocks := lastFile.Blocks
+		line, err := ParseLine(value)
+
+		if err == nil {
+			structuredLine := Line{Content: line, Number: 0}
 
 			if strings.HasPrefix(line, "-") {
-				l.Number = oldLineCounter
+				structuredLine.Number = oldLineCounter
 				newLineCounter--
 			} else if strings.HasPrefix(line, "+") {
-				l.Number = newLineCounter
+				structuredLine.Number = newLineCounter
 				oldLineCounter--
 			} else {
-				l.Number = newLineCounter
+				structuredLine.Number = newLineCounter
 			}
-			blocks[len(blocks)-1].Lines = append(blocks[len(blocks)-1].Lines, l)
+
+			blocks[len(blocks)-1].Lines = append(blocks[len(blocks)-1].Lines, structuredLine)
 			newLineCounter++
 			oldLineCounter++
 		}
 	}
+
 	return diff, nil
+}
+
+var errMatch = errors.New("match not found")
+
+func MatchError() error {
+	return errMatch
 }
